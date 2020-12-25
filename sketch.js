@@ -1,6 +1,6 @@
-var back_image,ground,mario_img,mario,invisibleGround,climber,climber_img,climberGroup,climberInvisibleGround,climberInvisibleGrndGrp, jump,gameOverSound;
+var back_image,ground,mario_img,mario,invisibleGround,climber,climber_img,climberGroup,climberInvisibleGround,climberInvisibleGrndGrp, jump,gameOverSound,ghostImage,ghost,ghostGroup,ghostStandingImg;
 
-var gameState;
+var gameState, score =0;
 
 function preload(){
   
@@ -11,6 +11,10 @@ function preload(){
 
   jump = loadSound("Mario-jump-sound.mp3");
   gameOverSound = loadSound("mixkit-video-game-bomb-alert-2803.wav");
+  
+ ghostImg = loadAnimation("ghost-standing.png","ghost-jumping.png");
+  
+  ghostStandingImg = loadAnimation("ghost-standing.png");
 }
 
 function setup() {
@@ -26,14 +30,17 @@ function setup() {
   
   climberGroup = new Group();
   climberInvisibleGrndGrp = new Group();
+  ghostGroup = new Group();
 }
 
 function draw() {
   background("#99ffff");
   ground.addImage(back_image);
   ground.scale = 0.52;
+  score = score +5;
   if(gameState === 'Play'){
     
+    text("score: "+Math.round(score),200,70)
     ground.velocityX = -3;
      if(ground.x < 130)
      {
@@ -56,17 +63,23 @@ function draw() {
     mario.velocityY =mario.velocityY + 0.7;
     
     spawnWall();
+    spawnGhost();
    if(climberGroup.isTouching(mario))
    {
       mario.velocityY = 0;
    }
     
-  if(climberInvisibleGrndGrp.isTouching(mario))
+  if(climberInvisibleGrndGrp.isTouching(mario) || (ghostGroup.isTouching(mario)))
     {
         
         mario.destroy();
-        gameOverSound.play()
+        gameOverSound.play();
+      ghost.velocityX = 0;
         gameState = 'End';
+      ghost.addAnimation("ghost",ghostStandingImg);
+        climberGroup.setLifetimeEach(-1);
+        climberInvisibleGrndGrp.setLifetimeEach(-1);
+        ghostGroup.setLifetimeEach(-1);
     }  
   
   }
@@ -80,6 +93,8 @@ function draw() {
       textSize(30);
       text("Game Over", 230,250);
       ground.velocityX = 0;
+     climberGroup.setVelocityXEach(0);
+     climberInvisibleGrndGrp.setVelocityXEach(0);
     }
   
   mario.collide(invisibleGround);
@@ -90,10 +105,10 @@ function draw() {
 
 function spawnWall(){
   if(frameCount% 240 === 0){
-     climber = createSprite(300,300,40,20);
+     climber = createSprite(680,300,40,20);
     climber.addImage(climber_img);
     climber.y = Math.round(random(250,300));
-    climber.x = Math.round(random(250,350));
+    //climber.x = Math.round(random(250,350));
     climber.velocityX = -2;
     climberInvisibleGround = createSprite(300,290);
     climberInvisibleGround.visible = false;
@@ -112,4 +127,15 @@ function spawnWall(){
   }
  
   
+}
+
+function spawnGhost(){
+  if(frameCount % 220 === 0){
+    ghost = createSprite(680,350,20,20);
+    ghost.addAnimation("ghost",ghostImg);
+    ghost.scale = 0.3
+    ghost.velocityX = -3;
+    ghost.Lifetime = 340;
+    ghostGroup.add(ghost);
+  }
 }
